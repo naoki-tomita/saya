@@ -31,7 +31,7 @@ type OperatedExpression = AddExpression | SubtractExpression | MultipleExpressio
 
 type NumberExpression = {
   type: "number";
-  value: number;
+  value: string;
 }
 
 type StringExpression = {
@@ -54,17 +54,16 @@ export type FunctionCallExpression = {
 
 export type Expression = OperatedExpression | ValueExpression | FunctionCallExpression;
 
-function valueExpresson(token: string): ValueExpression {
+export function parseValueExpression(token: string): ValueExpression {
   if (token.startsWith(`"`) && token.endsWith(`"`)) {
     return {
       type: "string",
       value: token.slice(1, -1)
     }
   } else if (token.match(/^\d+$/)) {
-    const numberValue = parseInt(token, 10);
     return {
       type: "number",
-      value: numberValue,
+      value: token,
     }
   } else {
     return {
@@ -74,7 +73,7 @@ function valueExpresson(token: string): ValueExpression {
   }
 }
 
-function argumentsExpression(generator: Generator<string>): ValueExpression[] {
+export function parseArgumentExpression(generator: Generator<string>): ValueExpression[] {
   const args: ValueExpression[] = [];
   while (true) {
     const arg = generator.next();
@@ -82,15 +81,15 @@ function argumentsExpression(generator: Generator<string>): ValueExpression[] {
       return args;
     }
     const separator = generator.next();
-    args.push(valueExpresson(arg.value));
+    args.push(parseValueExpression(arg.value));
     if (separator.value === ")") {
       return args;
     }
   }
 }
 
-function expressionParser(leftValue: string, generator: Generator<string>): Expression {
-  const left = valueExpresson(leftValue);
+export function parseExpression(leftValue: string, generator: Generator<string>): Expression {
+  const left = parseValueExpression(leftValue);
   const operator = generator.next();
   if (operator.value === ";") {
     return left;
@@ -98,10 +97,10 @@ function expressionParser(leftValue: string, generator: Generator<string>): Expr
     return {
       type: "functioncall",
       function: left,
-      arguments: argumentsExpression(generator),
+      arguments: parseArgumentExpression(generator),
     }
   } else {
-    const right = expressionParser(generator.next().value, generator);
+    const right = parseExpression(generator.next().value, generator);
     let operatedExpression: OperatedExpression
     switch (operator.value) {
       case "+":
@@ -149,48 +148,31 @@ export type Statement = {
   expression: Expression;
 }
 
-function letParser(generator: Generator<string>): Statement {
+export function parseDefineVariableStatement(token: "const" | "let", generator: Generator<string>): Statement {
   const name = generator.next();
   const equal = generator.next();
   if (equal.value !== "=") {
     throw Error(`Failed to parse code. expected '=' but was '${equal.value}'`);
   }
   const expressionToken = generator.next().value;
-  const expression = expressionParser(expressionToken, generator);
+  const expression = parseExpression(expressionToken, generator);
   return {
-    type: "let",
+    type: token,
     name: name.value,
     expression,
   }
 }
 
-function constParser(generator: Generator<string>): Statement {
-  const name = generator.next();
-  const equal = generator.next();
-  if (equal.value !== "=") {
-    throw Error(`Failed to parse code. expected '=' but was '${equal.value}'`);
-  }
-  const expressionToken = generator.next().value;
-  const expression = expressionParser(expressionToken, generator);
-  return {
-    type: "const",
-    name: name.value,
-    expression,
-  }
-}
-
-export function parser(tokens: Generator<string>): Array<Statement | Expression> {
+export function parse(tokens: Generator<string>): Array<Statement | Expression> {
   const results: Array<Statement | Expression> = [];
   let current = tokens.next();
   while (!current.done) {
-    if (current.value === "let") {
-      results.push(letParser(tokens));
-    } else if (current.value === "const") {
-      results.push(constParser(tokens));
+    if (current.value === "let" || current.value === "const") {
+      results.push(parseDefineVariableStatement(current.value, tokens));
     } else if (current.value === ";") {
       // do nothing.
     } else {
-      results.push(expressionParser(current.value, tokens))
+      results.push(parseExpression(current.value, tokens))
     }
     current = tokens.next();
   }

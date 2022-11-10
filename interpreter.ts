@@ -33,7 +33,7 @@ export function exec(ast: Array<Statement | Expression>, stack: Memory[]): Memor
   function execExpression(expression: Expression): string | number {
     switch (expression.type) {
       case "number":
-        return expression.value;
+        return parseInt(expression.value, 10);
       case "string":
         return expression.value;
       case "variable":
