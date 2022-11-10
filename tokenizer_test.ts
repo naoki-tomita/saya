@@ -21,10 +21,10 @@ Deno.test("let statement should be tokenized.", () => {
 
 Deno.test("function call expression should be tokenized.", () => {
   const code = `
-    println("foo", xx, yy);
+    someFunction(foo, "bar", 42, hoge());
   `;
   const tokens = [...tokenize(code)];
-  const expected = ["println", "(", `"foo"`, ",", "xx", ",", "yy", ")", ";"];
+  const expected = ["someFunction", "(", "foo", ",", `"bar"`, ",", "42", ",", "hoge", "(", ")", ")", ";"];
   assertEquals(tokens, expected);
 });
 

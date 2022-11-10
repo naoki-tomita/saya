@@ -3,4 +3,4 @@ let i = 99 + 1 - 2 * 5;
 const y = x + 5;
 const hoge = "fuga hoge" + " " + "foo bar";
 const x = hoge;
-println(hoge,"1",10, y, x);
+println(hoge, "1", 10, y, x, someFunc("foo", 42));

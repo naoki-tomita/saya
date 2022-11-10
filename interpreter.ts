@@ -6,6 +6,9 @@ const global: Memory = {
   println: (...args: any) => {
     console.log(args);
   },
+  someFunc: (a: string, b: number) => {
+    return `${a}:${b}`
+  }
 };
 
 function throws(error: any) {
@@ -25,7 +28,7 @@ export function exec(ast: Array<Statement | Expression>, stack: Memory[]): Memor
         case "variable":
           return access(it.name);
         default:
-          return it.value;
+          return execExpression(it);
       }
     }))
   }

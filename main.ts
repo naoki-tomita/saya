@@ -6,6 +6,6 @@ const text = await Deno.readTextFile(Deno.args[0]);
 const tokens = tokenize(text);
 // console.log([...tokens])
 const ast = parse(tokens);
-console.log(JSON.stringify(ast, null, "  "));
+// console.log(JSON.stringify(ast, null, "  "));
 const result = exec(ast, []);
-// console.log(result);
+console.log(result);

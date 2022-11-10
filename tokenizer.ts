@@ -1,5 +1,5 @@
 const SkipTokens = [" ", "\t", "\n"];
-const ControlTokens = [
+export const ControlTokens = [
   ";",
   `"`,
   "+", "-", "*", "/", "=",
