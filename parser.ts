@@ -45,6 +45,13 @@ type VariableExpression = {
   name: string;
 }
 
+type FunctionDefinitionExpression = {
+  type: "function";
+  name: string;
+  arguments: VariableExpression[];
+  statements: StatementOrExpression[];
+}
+
 type ValueExpression = NumberExpression | StringExpression | VariableExpression;
 
 export type FunctionCallExpression = {
@@ -53,7 +60,7 @@ export type FunctionCallExpression = {
   arguments: Expression[];
 };
 
-export type Expression = OperatedExpression | ValueExpression | FunctionCallExpression;
+export type Expression = OperatedExpression | ValueExpression | FunctionCallExpression | FunctionDefinitionExpression;
 
 export function parseValueExpression(token: string): ValueExpression {
   if (token.startsWith(`"`) && token.endsWith(`"`)) {
@@ -141,10 +148,53 @@ function isVariableLike(token: string): boolean {
   return true;
 }
 
+function parseFunctionDefinitionExpression(tokens: string[]): FunctionDefinitionExpression {
+  const _func = tokens.shift()!;
+  const name = tokens.shift()!;
+  tokens.shift(); //remove open brace
+  const argumentsParam: VariableExpression[] = [];
+  let current = tokens.shift()!;
+  while (current !== ")") {
+    argumentsParam.push({
+      type: "variable",
+      name: current,
+    });
+    if (tokens.shift() === ")") { // remove comma.
+      break;
+    }
+    current = tokens.shift()!
+  }
+
+  let braceCount = 0;
+  let indexOfEndOfBrace = 0;
+  for (let i = 0; i < tokens.length; i++) {
+    current = tokens[i];
+    if (current === "{") braceCount++;
+    if (current === "}") braceCount--;
+    if (braceCount === 0) {
+      indexOfEndOfBrace = i;
+      break;
+    }
+  }
+  const statements = parse(tokens.splice(1, indexOfEndOfBrace - 1));
+  tokens.shift() // remove open brace.
+  tokens.shift() // remove close brace.
+
+  return {
+    type: "function",
+    name,
+    arguments: argumentsParam,
+    statements,
+  }
+}
+
+
 const EndOfExpression = [";", undefined];
 export function parseExpression(tokens: string[]): Expression {
   const nextToken = tokens[1];
-  if (EndOfExpression.includes(nextToken)) {
+  if (tokens[0] === "func") {
+    return parseFunctionDefinitionExpression(tokens);
+  } else if (EndOfExpression.includes(nextToken)) {
     return parseValueExpression(tokens[0]);
   } else if (isVariableLike(tokens[0]) && nextToken === "(") {
     return parseFunctionExpression(tokens);
@@ -194,9 +244,17 @@ export function parseExpression(tokens: string[]): Expression {
   }
 }
 
-export type Statement = {
+
+type VariableDefinitionStatement = {
   type: "let" | "const";
   name: string;
+  expression: Expression;
+}
+
+export type Statement = VariableDefinitionStatement | ReturnStatement;
+
+type ReturnStatement = {
+  type: "return",
   expression: Expression;
 }
 
@@ -215,22 +273,49 @@ export function parseDefineVariableStatement(tokens: string[]): Statement {
   }
 }
 
-function getStatementOrExpression(tokens: Generator<string>): string[] {
-  const expressionTokens = [];
-  let current = tokens.next();
-  while (current.value !== ";" && !current.done) {
-    expressionTokens.push(current.value);
-    current = tokens.next();
+function getStatementOrExpression(tokens: string[]): string[] {
+  if (tokens.length === 0) {
+    return [];
   }
-  return expressionTokens;
+  const expressionTokens = [];
+  let current = tokens.shift()!;
+  let braceCount = 0;
+  let braceIn = false;
+  while (true) {
+    if (current === "{") {
+      braceCount++;
+      braceIn = true;
+    }
+    if (current === "}") braceCount--;
+    expressionTokens.push(current);
+    if (braceIn && braceCount === 0) {
+      return expressionTokens;
+    }
+    current = tokens.shift()!;
+    if (!braceIn && current === ";") {
+      return expressionTokens;
+    }
+  }
 }
 
-export function parse(tokens: Generator<string>): Array<Statement | Expression> {
-  const results: Array<Statement | Expression> = [];
+function parseReturnStatement(tokens: string[]): ReturnStatement {
+  const _ret = tokens.shift()! // return
+  const expression = parseExpression(tokens);
+  return {
+    type: "return",
+    expression,
+  }
+}
+
+type StatementOrExpression = Statement | Expression
+export function parse(tokens: string[]): StatementOrExpression[] {
+  const results: StatementOrExpression[] = [];
   while (true) {
     const expressionTokens = getStatementOrExpression(tokens);
-    if (expressionTokens[0] === "let" ||expressionTokens[0]  === "const") {
+    if (expressionTokens[0] === "let" || expressionTokens[0]  === "const") {
       results.push(parseDefineVariableStatement(expressionTokens));
+    } else if (expressionTokens[0] === "return") {
+      results.push(parseReturnStatement(expressionTokens));
     } else if (expressionTokens.length >= 1) {
       results.push(parseExpression(expressionTokens));
     } else {

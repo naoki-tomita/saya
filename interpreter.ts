@@ -15,9 +15,7 @@ function throws(error: any) {
   throw error;
 }
 
-export function exec(ast: Array<Statement | Expression>, stack: Memory[]): Memory[] {
-  const memory: Memory = {};
-
+export function exec(ast: Array<Statement | Expression>, memory: Memory): string | number | undefined {
   function access(name: string): any {
     return memory[name] ?? global[name] ?? throws(Error(`Variable ${name} does not defined`));
   }
@@ -43,6 +41,8 @@ export function exec(ast: Array<Statement | Expression>, stack: Memory[]): Memor
         return access(expression.name);
       case "functioncall":
         return call(expression);
+      case "function":
+        throw Error("unimplemented");
     }
     const left = execExpression(expression.left);
     const right = execExpression(expression.right);
@@ -58,16 +58,15 @@ export function exec(ast: Array<Statement | Expression>, stack: Memory[]): Memor
     }
   }
 
-  stack.push(memory)
-  if (Array.isArray(ast)) {
-    for (const el of ast) {
-      if (el.type === "const" || el.type === "let") {
-        memory[el.name] = execExpression(el.expression);
-      } else {
-        execExpression(el as Expression);
-      }
-
+  for (const el of ast) {
+    if (el.type === "const" || el.type === "let") {
+      memory[el.name] = execExpression(el.expression);
+    } else if (el.type === "function") {
+      memory[el.name] = (...args: any[]) => exec(el.statements, el.arguments.reduce((prev, curr, i) => ({ ...prev, [curr.name]: args[i] }), {}));
+    } else if (el.type === "return") {
+      return execExpression(el.expression);
+    } else {
+      execExpression(el as Expression);
     }
   }
-  return stack;
 }

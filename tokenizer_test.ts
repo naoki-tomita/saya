@@ -1,5 +1,36 @@
-import { assert, assertEquals } from "https://deno.land/std@0.65.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.65.0/testing/asserts.ts";
 import { tokenize } from "./tokenizer.ts";
+
+Deno.test("some arg and return string function definition should be tokenized.", () => {
+  const code = `
+    func funcName(arg1, arg2) {
+      return "success";
+    }
+  `;
+  const tokens = [...tokenize(code)];
+  const expected = ["func", "funcName", "(", "arg1", ",", "arg2", ")", "{", "return", `"success"`, ";", "}"]
+  assertEquals(tokens, expected);
+});
+
+Deno.test("minified function definition should be tokenized.", () => {
+  const code = `
+    func funcName() {println("Hello world");}
+  `;
+  const tokens = [...tokenize(code)];
+  const expected = ["func", "funcName", "(", ")", "{", "println", "(", `"Hello world"`, ")", ";", "}"]
+  assertEquals(tokens, expected);
+});
+
+Deno.test("no arg void function definition should be tokenized.", () => {
+  const code = `
+    func funcName() {
+      println("Hello world");
+    }
+  `;
+  const tokens = [...tokenize(code)];
+  const expected = ["func", "funcName", "(", ")", "{", "println", "(", `"Hello world"`, ")", ";", "}"]
+  assertEquals(tokens, expected);
+});
 
 Deno.test("const statement should be tokenized.", () => {
   const code = `

@@ -7,7 +7,7 @@
   * `someFunc`: return string by connected arguments.
 * [x] four arithmetic operations.
   * [ ] correct operation order calculation.
-* [ ] define function.
+* [x] define function.
 
 ```
 const x = 128 + 64;

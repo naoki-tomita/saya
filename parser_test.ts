@@ -1,12 +1,58 @@
 import { assertEquals } from "https://deno.land/std@0.65.0/testing/asserts.ts";
 import { parse, parseArgumentExpression, parseExpression, parseValueExpression } from "./parser.ts"
 
+Deno.test("Parse multi arg and return function definition", () => {
+  const code = ["func", "funcName", "(", "arg1", ",", "arg2", ")", "{", "return", `"success"`, ";", "}"];
+  const ast = parseExpression(code);
+  assertEquals(ast, {
+    type: "function",
+    name: "funcName",
+    arguments: [
+      {
+        type: "variable",
+        name: "arg1",
+      },
+      {
+        type: "variable",
+        name: "arg2",
+      }
+    ],
+    statements: [
+      {
+        type: "return",
+        expression: {
+          type: "string",
+          value: "success"
+        }
+      }
+    ]
+  });
+});
 
-function *toGenerator(array: string[]) {
-  for (const item of array) {
-    yield item;
-  }
-}
+Deno.test("Parse no arg void function definition.", () => {
+  const code = ["func", "funcName", "(", ")", "{", "println", "(", `"Hello world"`, ")", ";", "}"]
+  const ast = parseExpression(code);
+  assertEquals(ast, {
+    type: "function",
+    name: "funcName",
+    arguments: [],
+    statements: [
+      {
+        type: "functioncall",
+        function: {
+          type: "variable",
+          name: "println",
+        },
+        arguments: [
+          {
+            type: "string",
+            value: "Hello world"
+          }
+        ]
+      }
+    ]
+  });
+});
 
 Deno.test("Parse no args function call", () => {
   const code = [
@@ -139,7 +185,7 @@ Deno.test("Parse const statement", () => {
   const code = [
     "const", "varName", "=", "123", ";"
   ];
-  const ast = parse(toGenerator(code));
+  const ast = parse(code);
   assertEquals(ast, [
     {
       type: "const",
@@ -156,7 +202,7 @@ Deno.test("Parse let statement", () => {
   const code = [
     "let", "varName", "=", "123", ";"
   ];
-  const ast = parse(toGenerator(code));
+  const ast = parse(code);
   assertEquals(ast, [
     {
       type: "let",
@@ -173,7 +219,7 @@ Deno.test("Parse operation expression", () => {
   const code = [
     "1", "+", "1", ";"
   ];
-  const ast = parse(toGenerator(code));
+  const ast = parse(code);
   assertEquals(ast, [
     {
       type: "add",
@@ -194,7 +240,7 @@ Deno.test("Parse multiple operation expression sorted by calc order.", { ignore:
   const code = [
     "1", "+", "1", "-", "2", "*", "3", "/", "4", ";"
   ]
-  const ast = parse(toGenerator(code));
+  const ast = parse(code);
   assertEquals(ast, [
     {
       type: "devide",

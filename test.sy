@@ -1,6 +1,12 @@
-const x = 128 + 64;
-let i = 99 + 1 - 2 * 5;
-const y = x + 5;
-const hoge = "fuga hoge" + " " + "foo bar";
-const x = hoge;
-println(hoge, "1", 10, y, x, someFunc("foo", 42));
+func sample(arg1, arg2) {
+  return arg1 + arg2;
+}
+
+func hoge(x, y) {
+  println("hello world");
+  const x = 1;
+  return x + 3;
+}
+
+println(hoge());
+println(sample(1, 2));
