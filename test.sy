@@ -8,5 +8,7 @@ func hoge(x, y) {
   return x + 3;
 }
 
+const x = 1;
+
 println(hoge());
 println(sample(1, 2));

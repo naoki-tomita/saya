@@ -5,9 +5,6 @@ type Memory = Record<string, any>
 const global: Memory = {
   println: (...args: any) => {
     console.log(args);
-  },
-  someFunc: (a: string, b: number) => {
-    return `${a}:${b}`
   }
 };
 
@@ -60,6 +57,9 @@ export function exec(ast: Array<Statement | Expression>, memory: Memory): string
 
   for (const el of ast) {
     if (el.type === "const" || el.type === "let") {
+      if (memory[el.name]) {
+        throw Error(`Variable ${el.name} is already defined.`);
+      }
       memory[el.name] = execExpression(el.expression);
     } else if (el.type === "function") {
       memory[el.name] = (...args: any[]) => exec(el.statements, el.arguments.reduce((prev, curr, i) => ({ ...prev, [curr.name]: args[i] }), {}));
