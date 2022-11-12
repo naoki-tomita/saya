@@ -15,5 +15,11 @@ let i = 99 + 1 - 2 * 5;
 const y = x + 5;
 const hoge = "fuga hoge" + " " + "foo bar";
 const x = hoge;
-println(hoge, "1", 10, y, x, someFunc("foo", 42));
+
+func someFunc(arg1, arg2) {
+  const x = arg1 + arg2;
+  return x;
+}
+
+println(hoge, "1", 10, y, x, someFunc(42, 42));
 ```
