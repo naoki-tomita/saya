@@ -295,6 +295,9 @@ function getStatementOrExpression(tokens: string[]): string[] {
     if (!braceIn && current === ";") {
       return expressionTokens;
     }
+    if (tokens.length === 0) {
+      throw Error(`Unexpected EOF`);
+    }
   }
 }
 
