@@ -5,10 +5,14 @@ export const ControlTokens = [
   "+", "-", "*", "/", "=",
   "(", ")",
   "{", "}",
-  ","
+  ",",
 ];
 
-export function *tokenize(code: string): Generator<string> {
+export function tokenize(code: string) {
+  return [...tokenizeInner(code)];
+}
+
+export function *tokenizeInner(code: string): Generator<string> {
   let tmp = "";
   for (let i = 0; i < code.length; i++) {
     if (SkipTokens.includes(code[i])) {

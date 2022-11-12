@@ -4,7 +4,6 @@
 * [ ] define mutable constant.
 * [x] call built-in function.
   * `println`: print log.
-  * `someFunc`: return string by connected arguments.
 * [x] four arithmetic operations.
   * [ ] correct operation order calculation.
 * [x] define function.

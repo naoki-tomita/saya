@@ -3,8 +3,8 @@ import { Expression, FunctionCallExpression, Statement } from "./parser.ts";
 type Memory = Record<string, any>
 
 const global: Memory = {
-  println: (...args: any) => {
-    console.log(args);
+  println: (...args: any[]) => {
+    console.log(...args);
   }
 };
 
