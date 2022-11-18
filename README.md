@@ -1,12 +1,13 @@
 # saya
 
 * [x] define immutable constant.
-* [ ] define mutable constant.
+* [ ] define mutable variable.
 * [x] call built-in function.
   * `println`: print log.
 * [x] four arithmetic operations.
   * [ ] correct operation order calculation.
 * [x] define function.
+* [x] call user defined function.
 
 ```
 const x = 128 + 64;
